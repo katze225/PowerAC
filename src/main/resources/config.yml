@@ -1,0 +1,132 @@
+# <---> 
+# PowerAC - local AI anti-cheat (rotation / aim checks).
+# The neural network runs fully inside the plugin. No external server, no license key.
+# Model files live in this plugin folder: rotation.json (model) and rotation_replay.json (training data).
+# <--->
+
+settings:
+  # Message prefix
+  prefix: "&#00A4FB&lᴘ&#009CFB&lᴏ&#0095FB&lᴡ&#008DFB&lᴇ&#0085FB&lʀ&#007EFB&lᴀ&#0076FB&lᴄ&f:"
+  # Show alerts in console?
+  console-alerts: true
+  # Maximum simultaneously tracked players (-1 = unlimited)
+  max-players: -1
+
+  esp:
+    # Hide armor enchantments from entity equipment packets while keeping enchanted glint.
+    hide-enchants: true
+    # Hide visible health values for other players.
+    hide-health: true
+    # Hide visible durability state from entity equipment packets.
+    hide-durability: true
+    # Hide stack count from entity equipment packets.
+    hide-count: true
+
+  violations:
+    # How often (in seconds) to clear players VL (0 - disable)
+    clear-interval-seconds: 1500
+    # Total VL required before punishment commands are executed.
+    max-vl: 3
+    # Commands executed after reaching maxVL.
+    # Placeholders: {player}, {uuid}, {module}, {reason}, {vl}, {added_vl}, {probability}, {total_vl}, {max_vl}.
+    punishment-commands:
+      - "kick {player} Cheating"
+
+  suspicious:
+    brands:
+      # Block clients with suspicious brand/version combinations.
+      block: true
+
+  performance:
+    # Disable rotation checks while TPS is below
+    min-tps-to-check: 18.0
+
+  # Local neural network settings.
+  model:
+    # Load the bundled rotation.json on startup.
+    auto-load: true
+    # Slope of the training data kept per class (older windows are dropped).
+    max-windows-per-class: 4000
+    # Minimum number of windows per class before training actually runs.
+    min-windows-per-class: 60
+    # Training hyperparameters (AdamW + BCEWithLogits).
+    epochs: 8
+    batch-size: 128
+    learning-rate: 0.0003
+    weight-decay: 0.01
+    grad-clip: 1.0
+
+  discord:
+    # Enable Discord webhook notifications for detections
+    enabled: false
+    # Sends on first detection and then on each multiple of this VL value (example: 3 -> 1, 3, 6, 9)
+    send-every-vl: 3
+    # Discord webhook URL
+    url: ""
+    # Embed color (#RRGGBB, 0xRRGGBB, or decimal)
+    embed-color: "#00A4FB"
+    # Embed title
+    embed-title: "PowerAC Detection"
+    # Embed description lines. Placeholders:
+    # {player}, {uuid}, {module}, {reason}, {vl}, {added_vl}, {total_vl}, {probability}, {detection_count}
+    content:
+      - "**Player:** {player}"
+      - "**UUID:** {uuid}"
+      - "**Module:** {module}"
+      - "**Reason:** {reason}"
+      - "**Probability:** {probability}"
+      - "**Added VL:** {added_vl}"
+      - "**Check VL:** {vl}"
+      - "**Total VL:** {total_vl}"
+      - "**Detection Count:** {detection_count}"
+
+messages:
+  player-limit-reached: "&cServer is full! Increase settings.max-players to allow more players."
+  suspicious-brand-kick: "&cSuspicious client brand detected. Brand: {brand}, version: {version}."
+  no-permission: "{prefix} &cNo permission."
+  only-player: "{prefix} &cThis command can only be used by a player."
+  player-not-found: "{prefix} &cPlayer not found."
+  alerts-enabled: "{prefix} &aAlerts enabled."
+  alerts-disabled: "{prefix} &cAlerts disabled."
+  monitor-enabled: "{prefix} &aMonitor enabled for &f{player}&a."
+  monitor-disabled: "{prefix} &cMonitor disabled for &f{player}&c."
+  monitor-actionbar: "&bprobability: &f{probability}&7, &bdetected: &f{detected}&7, &bg: &f{global}&7, &bt: &f{time}&7, &bp: &f{player}"
+  reload: "{prefix} &aConfig reloaded."
+  model-status-ready: "{prefix} &aRotation model loaded."
+  model-status-missing: "{prefix} &cRotation model is not loaded. Train it with /powerac train."
+  player-info:
+    - "{prefix}"
+    - "&fName: &#00A4FB{player}"
+    - "&fUUID: &#00A4FB{uuid}"
+    - "&fVersion: &#00A4FB{version}"
+    - "&fBrand: &#00A4FB{brand}"
+    - "&fVL: &#00A4FB{vl}"
+  alert: "{prefix} &fPlayer &#00A4FB{player} &fflagged by &#00A4FB{module} &7(reason: {reason}, +vl: {added_vl}, total: {vl})"
+  train:
+    usage: "&fUsage: &#00A4FB/powerac train <legit|cheater> [true|false] &7or &#00A4FB/powerac train <player> <legit|cheater> [true|false]"
+    stop-usage: "&fUsage: &#00A4FB/powerac train stop [player] &7- stop an active training session"
+    clear-usage: "&fUsage: &#00A4FB/powerac train clear &7- clear trained model data"
+    stopped: "&aTraining session stopped."
+    not-running: "&cNo training session is currently running."
+    cleared: "&aTrained model data has been cleared."
+    only-legit-or-cheater: "&cLabel must be legit or cheater."
+    invalid-continuous: "&cContinuous must be true or false."
+    already-running: "&cA training session is already running."
+    collecting-started: "&aCollecting {samples} samples started{mode}."
+    trained: "&aModel trained. loss: &f{loss}&a, legit: &f{legit}&a, cheater: &f{cheater}&a. Batches: &f{count}"
+    sent: "&aModel trained. Batches sent: &f{count}"
+    sent-continuous: "&aModel trained. Collecting next batch... Batches: &f{count}"
+    waiting: "&eData stored (legit: &f{legit}&e, cheater: &f{cheater}&e). Collect the other class too and retrain."
+    error: "&cTraining error: {details}"
+  help:
+    - "{prefix}"
+    - "&#00A4FB/powerac player <name> &7- player info"
+    - "&#00A4FB/powerac alerts &7- enable/disable alerts"
+    - "&#00A4FB/powerac monitor [player] &7- monitor AI results in action bar"
+    - "&#00A4FB/powerac status &7- local model status"
+    - "&#00A4FB/powerac train <legit|cheater> [true|false] &7- train the local model"
+    - "&#00A4FB/powerac train <player> <legit|cheater> [true|false] &7- train using another player"
+    - "&#00A4FB/powerac train stop [player] &7- stop active training"
+    - "&#00A4FB/powerac train clear &7- clear trained model data"
+    - "&#00A4FB/powerac reload &7- reload config"
+    - "&7PowerAC &8| &7tg: &#00A4FBhttps://t.me/core2k21 &8| &7discord: &#00A4FBhttps://discord.gg/zewRxfEANC"
