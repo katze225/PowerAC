@@ -41,7 +41,7 @@ dependencies {
     compileOnly("com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT")
     compileOnly("org.projectlombok:lombok:1.18.36")
     annotationProcessor("org.projectlombok:lombok:1.18.36")
-    implementation("com.github.retrooper:packetevents-spigot:2.12.0")
+    implementation("com.github.retrooper:packetevents-spigot:2.14.0")
     implementation("co.aikar:acf-bukkit:0.5.1-SNAPSHOT")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.bstats:bstats-bukkit:3.2.1")
